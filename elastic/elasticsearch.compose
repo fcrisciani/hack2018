@@ -1,0 +1,26 @@
+version: "3.3"
+
+services:
+  elasticsearch:
+    image: elasticsearch:alpine
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - /home/docker/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    networks:
+      - backend
+    deploy:
+      replicas: 3
+  kibana:
+    image: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - backend
+
+networks:
+  backend:
+    attachable: true

@@ -1,0 +1,5 @@
+sudo sysctl -w vm.max_map_count=262144
+
+copy elasticsearch config file on all the machines
+
+docker stack deploy -c elasticsearch.compose aaa
