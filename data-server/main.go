@@ -1,11 +1,15 @@
 package main
 
-import "github.com/fcrisciani/hack2018/data-server/methods"
+import (
+	"github.com/fcrisciani/hack2018/data-server/elastic"
+	"github.com/fcrisciani/hack2018/data-server/methods"
+)
 
 func main() {
 	s := methods.New()
 	s.Init()
-	s.Start()
+	// s.Start()
+	elastic.MatchField()
 	// block forever
-	select {}
+	// select {}
 }
