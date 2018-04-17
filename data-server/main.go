@@ -9,7 +9,8 @@ func main() {
 	s := methods.New()
 	s.Init()
 	// s.Start()
-	elastic.MatchField()
+	elastic.GetServices()
+	elastic.GetConnections("10.96.0.1", 0)
 	// block forever
 	// select {}
 }
