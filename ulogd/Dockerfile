@@ -19,4 +19,6 @@ RUN cd ulogd2 && ./autogen.sh
 RUN cd ulogd2 && ./configure
 RUN cd ulogd2 && make
 RUN cd ulogd2 && make install
-ENTRYPOINT ["ulogd", "-d"]
+COPY ./ulogd.conf /usr/local/etc/ulogd.conf
+COPY ./run.sh /usr/local/bin/run.sh
+ENTRYPOINT ["run.sh"]
