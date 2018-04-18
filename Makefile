@@ -1,6 +1,6 @@
-ULOGD-IMAGE="fcrisciani/data-server:ulogd"
-DATA-SERVER="fcrisciani/data-server:fakedata"
-UI-SERVER="fcrisciani/data-server:ui"
+ULOGD-IMAGE="fcrisciani/argus:ulogd"
+DATA-SERVER="fcrisciani/argus:data-server"
+UI-SERVER="fcrisciani/argus:ui"
 
 .PHONY: server ulogd
 
