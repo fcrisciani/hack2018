@@ -1,0 +1,29 @@
+body {
+  width: 100vw;
+  height: 100vh;
+}
+#root {
+
+  flex: 1;
+}
+.App {
+  text-align: center;
+  width: 100vw;
+  height: 80vh;
+  padding-top: 30px;
+}
+.loading {
+  display: flex;
+  flex: 1;
+  text-align: center;
+  align-content: center;
+  align-self: center;
+  justify-content: center;
+}
+
+.controllersContainer {
+  flex: 0 0 auto;
+}
+.controls {
+  margin: 5px;
+}
