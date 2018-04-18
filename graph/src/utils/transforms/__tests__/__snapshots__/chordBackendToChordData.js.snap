@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`data transform 1`] = `
+Object {
+  "labels": Array [
+    "service 1",
+    "service 2",
+    "service 3",
+    "service 4",
+  ],
+  "matrix": Array [
+    Array [
+      0,
+      2,
+      6,
+      9,
+    ],
+    Array [
+      0,
+      0,
+      6,
+      1,
+    ],
+    Array [
+      6,
+      0,
+      0,
+      1,
+    ],
+    Array [
+      4,
+      0,
+      4,
+      0,
+    ],
+  ],
+}
+`;
