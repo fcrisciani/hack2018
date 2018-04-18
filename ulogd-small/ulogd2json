@@ -1,0 +1,37 @@
+#!/usr/bin/awk -f
+
+# Apr 18 15:24:15 1e535e56c66e [NEW] ORIG: SRC=172.17.0.2 DST=8.8.8.8 PROTO=UDP SPT=32985 DPT=53 PKTS=0 BYTES=0 , REPLY: SRC=8.8.8.8 DST=172.17.0.2 PROTO=UDP SPT=53 DPT=32985 PKTS=0 BYTES=0 
+# Apr 18 15:29:43 1e535e56c66e [NEW] ORIG: SRC=172.17.0.2 DST=72.30.35.9 PROTO=ICMP TYPE=0 CODE=8 PKTS=0 BYTES=0 , REPLY: SRC=72.30.35.9 DST=172.17.0.2 PROTO=ICMP TYPE=0 CODE=8 PKTS=0 BYTES=0 
+
+NF >= 5 {
+	MONTH=$1
+	DAY=$2
+	TIME=$3
+	HOST=$4
+	STATE=$5
+	gsub("]", "", STATE)
+	gsub("\\[", "", STATE)
+
+	OUT = "{\"host\":\"" HOST "\"," "\"state\":\"" STATE "\","
+	PFX=""
+	for (i = 6; i <= NF; i++) {
+		if ($i ~ /[a-zA-Z0-9]+:$/) {
+			PFX = $i
+			sub(/:/, "_", PFX)
+		} else if ($i ~ /[a-zA-Z0-9]=.*$/) {
+			KEY = $i
+			sub(/=.*$/, "", KEY)
+			KEY = tolower(PFX KEY)
+			VAL = $i
+			sub(/^.*=/, "", VAL)
+			VAL = tolower(VAL)
+			if (VAL ~ /^[0-9]+$/) {
+				OUT = OUT "\"" KEY "\":" VAL ","
+			} else {
+				OUT = OUT "\"" KEY "\":\"" VAL "\","
+			}
+		}
+	}
+	gsub(/,$/, "", OUT)
+	print OUT "}"
+}
