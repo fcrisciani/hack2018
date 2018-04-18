@@ -1,4 +1,5 @@
 #!/bin/sh
 
 sed -ie "s/MYHOSTNAME/"`hostname`"/" /usr/local/etc/ulogd.conf
-exec ulogd -v 
+ulogd -d
+/usr/share/logstash/bin/logstash -f /etc/logstash.conf
