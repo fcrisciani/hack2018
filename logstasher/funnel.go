@@ -62,7 +62,7 @@ func translate(s string) string {
 		{"\"udp\"", "17"},
 		{"\"icmp\"", "11"},
 		{"\"NEW\"", "1"},
-		{"\"DEL\"", "4"},
+		{"\"DESTROY\"", "4"},
 	}
 
 	for i := range trans {
