@@ -101,6 +101,9 @@ class App extends Component {
       playing: newVal,
       hasPauseCursor: !newVal
     })
+    if (newVal === true) {
+      this.tick();
+    }
   }
   render() {
     if (this.state.initialFetching) {
