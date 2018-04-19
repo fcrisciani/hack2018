@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/olivere/elastic"
+	"github.com/sirupsen/logrus"
 )
 
 func NewClient(ip, port string) (*elastic.Client, error) {
@@ -34,6 +35,7 @@ func GetAllConnections(IP string, protocol int) ([]*Connection, error) {
 	searchResult, err := c.Search().
 		Index("logstash-*"). // search in index "twitter"
 		Query(shouldClause). // specify the query
+		Size(10000).
 		// Sort("Time", true).           // sort by "user" field, ascending
 		// From(0).Size(10).        // take documents 0-9
 		// Pretty(true).            // pretty print request and response JSON
@@ -44,15 +46,15 @@ func GetAllConnections(IP string, protocol int) ([]*Connection, error) {
 	}
 	// searchResult is of type SearchResult and returns hits, suggestions,
 	// and all kinds of other information from Elasticsearch.
-	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
+	logrus.Debugf("Query took %d milliseconds", searchResult.TookInMillis)
 
 	connections := make([]*Connection, 0, searchResult.Hits.TotalHits)
 	// Number of hits
 	if searchResult.Hits.TotalHits > 0 {
-		fmt.Printf("Found a total of %d packets\n", searchResult.Hits.TotalHits)
+		logrus.Debugf("Found a total of %d connections", searchResult.Hits.TotalHits)
 
 		// Iterate through results
-		for _, hit := range searchResult.Hits.Hits {
+		for i, hit := range searchResult.Hits.Hits {
 			// hit.Index contains the name of the index
 
 			// Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
@@ -64,13 +66,13 @@ func GetAllConnections(IP string, protocol int) ([]*Connection, error) {
 			}
 
 			// Work with tweet
-			fmt.Printf("Connection %+v\n", t)
+			logrus.Debugf("%d) Connection %+v", i, t)
 
 			connections = append(connections, &t)
 		}
 	} else {
 		// No hits
-		fmt.Print("Found no connections\n")
+		logrus.Debug("Found no connections")
 		return nil, nil
 	}
 

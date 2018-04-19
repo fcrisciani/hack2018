@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/olivere/elastic"
+	"github.com/sirupsen/logrus"
 )
 
 type podMetadata struct {
@@ -36,6 +37,7 @@ func GetPods() ([]*Pod, error) {
 	searchResult, err := c.Search().
 		Index("k8s.io_resource"). // search in index "twitter"
 		Type("pod").
+		Size(10000).
 		// Query(termQuery).             // specify the query
 		// Sort("Time", true).           // sort by "user" field, ascending
 		// From(0).Size(10).        // take documents 0-9
@@ -48,7 +50,7 @@ func GetPods() ([]*Pod, error) {
 
 	// searchResult is of type SearchResult and returns hits, suggestions,
 	// and all kinds of other information from Elasticsearch.
-	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
+	logrus.Debugf("Query took %d milliseconds", searchResult.TookInMillis)
 	return parsePods(searchResult)
 }
 
@@ -75,6 +77,7 @@ func GetPodsForService(srv *Service) ([]*Pod, error) {
 		Index("k8s.io_resource"). // search in index "twitter"
 		Type("pod").
 		Query(shouldClause). // specify the query
+		Size(10000).
 		// Sort("Time", true).           // sort by "user" field, ascending
 		// From(0).Size(10).        // take documents 0-9
 		// Pretty(true).            // pretty print request and response JSON
@@ -86,17 +89,17 @@ func GetPodsForService(srv *Service) ([]*Pod, error) {
 
 	// searchResult is of type SearchResult and returns hits, suggestions,
 	// and all kinds of other information from Elasticsearch.
-	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
+	logrus.Debugf("Query took %d milliseconds", searchResult.TookInMillis)
 	return parsePods(searchResult)
 }
 
 func parsePods(searchResult *elastic.SearchResult) ([]*Pod, error) {
 	podList := make([]*Pod, 0, searchResult.Hits.TotalHits)
 	if searchResult.Hits.TotalHits > 0 {
-		fmt.Printf("Found a total of %d pod\n", searchResult.Hits.TotalHits)
+		logrus.Debugf("Found a total of %d pod, len hits:%d", searchResult.Hits.TotalHits, len(searchResult.Hits.Hits))
 
 		// Iterate through results
-		for _, hit := range searchResult.Hits.Hits {
+		for i, hit := range searchResult.Hits.Hits {
 			// hit.Index contains the name of the index
 
 			// Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
@@ -106,12 +109,12 @@ func parsePods(searchResult *elastic.SearchResult) ([]*Pod, error) {
 				// Deserialization failed
 			}
 
-			fmt.Printf("Pod %+v\n", t)
+			logrus.Debugf("%d) Pod %+v", i, t)
 			podList = append(podList, &t)
 		}
 	} else {
 		// No hits
-		fmt.Print("Found no pod\n")
+		logrus.Debugf("Found no pod")
 		return nil, nil
 	}
 

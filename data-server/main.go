@@ -9,6 +9,7 @@ func main() {
 	logrus.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
 	})
+	logrus.SetLevel(logrus.DebugLevel)
 	s := methods.New()
 	s.Init()
 	s.Start()

@@ -3,7 +3,8 @@ package elastic
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 )
 
 type serviceMetadata struct {
@@ -30,6 +31,7 @@ func GetServices() ([]*Service, error) {
 	searchResult, err := c.Search().
 		Index("k8s.io_resource"). // search in index "twitter"
 		Type("service").
+		Size(10000).
 		// Query(termQuery).             // specify the query
 		// Sort("Time", true).           // sort by "user" field, ascending
 		// From(0).Size(10).        // take documents 0-9
@@ -42,14 +44,14 @@ func GetServices() ([]*Service, error) {
 
 	// searchResult is of type SearchResult and returns hits, suggestions,
 	// and all kinds of other information from Elasticsearch.
-	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
+	logrus.Debugf("Query took %d milliseconds", searchResult.TookInMillis)
 
 	serviceList := make([]*Service, 0, searchResult.Hits.TotalHits)
 	if searchResult.Hits.TotalHits > 0 {
-		fmt.Printf("Found a total of %d packets\n", searchResult.Hits.TotalHits)
+		logrus.Debugf("Found a total of %d services", searchResult.Hits.TotalHits)
 
 		// Iterate through results
-		for _, hit := range searchResult.Hits.Hits {
+		for i, hit := range searchResult.Hits.Hits {
 			// hit.Index contains the name of the index
 
 			// Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
@@ -63,12 +65,12 @@ func GetServices() ([]*Service, error) {
 			// Work with tweet
 			// fmt.Printf("Service %s\n", *hit.Source)
 
-			fmt.Printf("Service %+v\n", t)
+			logrus.Debugf("%d) Service %+v", i, t)
 			serviceList = append(serviceList, &t)
 		}
 	} else {
 		// No hits
-		fmt.Print("Found no packets\n")
+		logrus.Debug("Found no services")
 		return nil, nil
 	}
 
