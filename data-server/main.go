@@ -1,16 +1,33 @@
 package main
 
 import (
-	"github.com/fcrisciani/hack2018/data-server/elastic"
 	"github.com/fcrisciani/hack2018/data-server/methods"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
 	s := methods.New()
 	s.Init()
-	// s.Start()
-	elastic.GetServices()
-	elastic.GetConnections("10.96.0.1", 0)
+	s.Start()
+	// elastic.GetPods()
+	// services, _ := elastic.GetServices()
+	//
+	// for _, s := range services {
+	// 	logrus.Infof("Pods for service:%+v", s)
+	// 	pods, _ := elastic.GetPodsForService(s)
+	// 	for _, p := range pods {
+	// 		logrus.Infof("Connection for pod:%+v", p)
+	// 		elastic.GetAllConnections(p.Status.PodIP, 0)
+	// 	}
+	// 	logrus.Infof("Connections for service:%+v", s)
+	// 	elastic.GetAllConnections(s.Spec.ClusterIP, 0)
+	// }
+	// elastic.GetAllConnections("10.96.103.186", 0)
+	// logrus.Infof("========")
+	// elastic.GetAllConnections("10.96.0.10", 0)
 	// block forever
-	// select {}
+	select {}
 }

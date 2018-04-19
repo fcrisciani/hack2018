@@ -6,8 +6,9 @@ import (
 	"fmt"
 )
 
-type metadata struct {
-	ServiceName string `json:"name"`
+type serviceMetadata struct {
+	ServiceName string            `json:"name"`
+	Labels      map[string]string `json:"labels"`
 }
 
 type serviceSpec struct {
@@ -15,7 +16,7 @@ type serviceSpec struct {
 }
 
 type Service struct {
-	Meta metadata `json:"metadata"`
+	Meta serviceMetadata `json:"metadata"`
 	Spec serviceSpec
 }
 
@@ -31,8 +32,8 @@ func GetServices() ([]*Service, error) {
 		Type("service").
 		// Query(termQuery).             // specify the query
 		// Sort("Time", true).           // sort by "user" field, ascending
-		From(0).Size(10).        // take documents 0-9
-		Pretty(true).            // pretty print request and response JSON
+		// From(0).Size(10).        // take documents 0-9
+		// Pretty(true).            // pretty print request and response JSON
 		Do(context.Background()) // execute
 	if err != nil {
 		// Handle error

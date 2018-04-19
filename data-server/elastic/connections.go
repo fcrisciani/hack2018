@@ -16,41 +16,27 @@ func NewClient(ip, port string) (*elastic.Client, error) {
 type Connection struct {
 	SrcIP    string `json:"src_ip"`
 	DstIP    string `json:"dest_ip"`
-	Protocol string `json:"oob.prefix"`
-	SrcPort  int    `json:"src_port"`
-	DstPort  int    `json:"dest_port"`
+	Protocol int    `json:"orig.ip.protocol"`
+	SrcPort  int    `json:"orig.l4.sport"`
+	DstPort  int    `json:"orig.l4.dport"`
 }
 
-func GetConnections(IP string, protocol int) ([]*Connection, error) {
+func GetAllConnections(IP string, protocol int) ([]*Connection, error) {
 	c, err := NewClient("52.42.55.249", "9200")
 	if err != nil {
 		panic(err)
 	}
 
-	// termQuery := elastic.NewTermQuery("dest_ip", "172.31.39.84")
-	searchResult, err := c.Search().
-		Index("k8s.io_resource"). // search in index "twitter"
-		Type("service").
-		// Query(termQuery).             // specify the query
-		// Sort("Time", true).           // sort by "user" field, ascending
-		From(0).Size(10).        // take documents 0-9
-		Pretty(true).            // pretty print request and response JSON
-		Do(context.Background()) // execute
-	if err != nil {
-		// Handle error
-		panic(err)
-	}
-
-	shouldClause := elastic.NewBoolQuery().Should(elastic.NewTermQuery("dest_ip", IP), elastic.NewTermQuery("src_ip", IP))
+	shouldClause := elastic.NewBoolQuery().Should(elastic.NewMatchPhraseQuery("dest_ip", IP), elastic.NewMatchPhraseQuery("src_ip", IP))
 	if protocol != 0 {
-		shouldClause = shouldClause.Must(elastic.NewTermQuery("ip.protocol", protocol))
+		shouldClause = shouldClause.Must(elastic.NewMatchPhraseQuery("ip.protocol", protocol))
 	}
-	searchResult, err = c.Search().
-		Index("logstash-2018.04.17"). // search in index "twitter"
-		Query(shouldClause).          // specify the query
+	searchResult, err := c.Search().
+		Index("logstash-*"). // search in index "twitter"
+		Query(shouldClause). // specify the query
 		// Sort("Time", true).           // sort by "user" field, ascending
-		From(0).Size(10).        // take documents 0-9
-		Pretty(true).            // pretty print request and response JSON
+		// From(0).Size(10).        // take documents 0-9
+		// Pretty(true).            // pretty print request and response JSON
 		Do(context.Background()) // execute
 	if err != nil {
 		// Handle error
@@ -78,7 +64,7 @@ func GetConnections(IP string, protocol int) ([]*Connection, error) {
 			}
 
 			// Work with tweet
-			fmt.Printf("Packet %+v\n", t)
+			fmt.Printf("Connection %+v\n", t)
 
 			connections = append(connections, &t)
 		}

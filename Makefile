@@ -18,4 +18,8 @@ push:
 ui:
 	docker build -t ${UI-SERVER} graph
 
+update:
+	docker service update --force --update-parallelism 0 --image=${DATA-SERVER} data-server
+	docker service update --force --update-parallelism 0 --image=${UI-SERVER} ui
+
 all: server ulogd

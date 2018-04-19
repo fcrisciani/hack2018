@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 )
@@ -22,8 +23,9 @@ func (h httpHandlerCustom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 var diagPaths2Func = map[string]HTTPHandlerFunc{
-	"/":      notImplemented,
-	"/chord": chord,
+	"/":         notImplemented,
+	"/chord":    chord,
+	"/services": services,
 }
 
 // Server when the debug is enabled exposes a
@@ -32,17 +34,25 @@ type Server struct {
 	srv               *http.Server
 	mux               *http.ServeMux
 	registeredHanders map[string]bool
+
+	serviceList      []*ServiceConnections
+	serviceIPtoIndex map[string]int
+	serviceListLock  sync.Mutex
 }
 
 // New creates a new diagnose server
 func New() *Server {
 	return &Server{
 		registeredHanders: make(map[string]bool),
+		serviceIPtoIndex:  make(map[string]int),
 	}
 }
 
 // Init initialize the mux for the http handling and register the base hooks
 func (s *Server) Init() {
+	// initialize services data
+	s.initServices()
+
 	s.mux = http.NewServeMux()
 
 	// Register local handlers
