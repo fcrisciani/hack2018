@@ -66,7 +66,7 @@ func translate(s string) string {
 	}
 
 	for i := range trans {
-		s = strings.Replace(s, trans[i].old, trans[i].new, 1)
+		s = strings.Replace(s, trans[i].old, trans[i].new, 100)
 	}
 
 	return s
