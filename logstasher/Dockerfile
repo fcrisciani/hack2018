@@ -17,5 +17,6 @@ RUN apt-get update && \
 
 COPY --from=build /build/funnel /usr/bin/funnel
 COPY ./logstash.conf /etc/logstash.conf
+COPY run.sh /usr/bin/run.sh
 
 ENTRYPOINT ["run.sh"]
