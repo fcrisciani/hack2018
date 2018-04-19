@@ -6,6 +6,7 @@ import HistorySelect from './appComponents/HistorySelect';
 import PlayPause from './appComponents/PlayPause';
 import sample from './mock/sample.json';
 import './App.css';
+import debounce from 'lodash/debounce'
 
 let tickCount = 1;
 const sum = (a, b) => {
@@ -20,6 +21,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = ({
+      endpoint:'http://52.42.55.249:10000/chord',
       hasPauseCursor: false,
       playing: true,
       history: [],
@@ -28,14 +30,14 @@ class App extends Component {
       labels:[],
     })
   }
-  tick = () => {
+  tick = debounce(() => {
 
     this.doRequest();
     clearTimeout(this.timeout);
     const TICK_PERIOD = 1000;
     const timeoutT =  Math.min(TICK_PERIOD * tickCount++,10000)
     this.timeout = setTimeout(this.tick, timeoutT);
-  }
+  }, 1000)
   doRequest() {
     const setNewState = (newState) => {
       const time = new Date();
@@ -70,7 +72,7 @@ class App extends Component {
       setNewState(newState);
     } else {
       request
-        .get('http://52.42.55.249:10000/chord')
+        .get(this.state.endpoint)
         .end((err, res) => {
           if(err) {
             console.log('error', err);
@@ -105,6 +107,12 @@ class App extends Component {
       this.tick();
     }
   }
+  onInputChange = (e) => {
+    this.setState({
+      endpoint: e.target.value
+    })
+    this.tick();
+  }
   render() {
     if (this.state.initialFetching) {
       return(
@@ -115,6 +123,16 @@ class App extends Component {
     }
     return (
       <div className="App">
+        <label>
+          endpoint
+          <input
+            style={{
+              border: 0,
+              width: 400,
+              margin: '0 5px',
+            }}
+           onChange={this.onInputChange} value={this.state.endpoint} type="text"/>
+        </label>
         <h3 className="title">
           <PlayPause onChange={this.onPlayPauseChange} playing={this.state.playing}/>
           {this.state.totalCount} connections @{this.state.time.toLocaleTimeString('en-US')}
