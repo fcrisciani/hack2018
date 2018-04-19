@@ -572,6 +572,9 @@ class TimeSeriesChart extends Component<Props, State> {
           onMouseMove={this.onMouseMove}
           onMouseLeave={this.mouseout}>
         <svg
+            style={{
+              cursor: 'crosshair',
+            }}
             ref={node => {this.rootNode = node}}>
           <g className="chart">
             <MouseEventCaptureRectangle {...this.props} />
