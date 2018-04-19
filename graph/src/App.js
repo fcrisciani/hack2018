@@ -37,7 +37,7 @@ class App extends Component {
     const TICK_PERIOD = 1000;
     const timeoutT =  Math.min(TICK_PERIOD * tickCount++,10000)
     this.timeout = setTimeout(this.tick, timeoutT);
-  }, 1000)
+  }, 500)
   doRequest() {
     const setNewState = (newState) => {
       const time = new Date();
