@@ -12,7 +12,7 @@ NF >= 5 {
 	gsub("]", "", STATE)
 	gsub("\\[", "", STATE)
 
-	OUT = "{\"timestamp\":\"" strftime("%F-%R:%S") "\",\"host\":\"" HOST "\"," "\"state\":\"" STATE "\","
+	OUT = "{\"timestamp\":\"" strftime("%FT%R:%S") "\",\"host\":\"" HOST "\"," "\"state\":\"" STATE "\","
 	PFX=""
 	for (i = 6; i <= NF; i++) {
 		if ($i ~ /[a-zA-Z0-9]+:$/) {
