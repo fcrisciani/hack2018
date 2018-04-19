@@ -8,6 +8,7 @@ import sample from './mock/sample.json';
 import './App.css';
 import debounce from 'lodash/debounce'
 
+const ENDPOINT_LOCALSTORAGE_KEY = 'hkdayendpoint';
 let tickCount = 1;
 const sum = (a, b) => {
   return a + b;
@@ -21,7 +22,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = ({
-      endpoint:'http://52.42.55.249:10000/chord',
+      endpoint:localStorage.getItem(ENDPOINT_LOCALSTORAGE_KEY) || 'http://52.42.55.249:10000/chord',
       hasPauseCursor: false,
       playing: true,
       history: [],
@@ -107,10 +108,15 @@ class App extends Component {
       this.tick();
     }
   }
+  storeEndpoint = debounce((endpoint) => {
+    localStorage.setItem(ENDPOINT_LOCALSTORAGE_KEY, endpoint)
+  }, 200)
   onInputChange = (e) => {
+    const endpoint = e.target.value;
     this.setState({
-      endpoint: e.target.value
+      endpoint,
     })
+    this.storeEndpoint(endpoint)
     this.tick();
   }
   render() {
