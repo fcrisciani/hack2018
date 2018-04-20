@@ -28,7 +28,7 @@ func main() {
 	// }
 	// elastic.GetAllConnections("10.96.103.186", 0)
 	// logrus.Infof("========")
-	// elastic.GetAllConnections("10.96.0.10", 0)
+	// elastic.GetAllConnections("192.168.195.217", 0)
 	// block forever
 	select {}
 }

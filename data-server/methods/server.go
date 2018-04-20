@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fcrisciani/hack2018/data-server/elastic"
+	el "github.com/olivere/elastic"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,6 +31,7 @@ var diagPaths2Func = map[string]HTTPHandlerFunc{
 	"/chord":    chord,
 	"/services": services,
 	"/pods":     pods,
+	"/external": servicesToUnknown,
 }
 
 // Server when the debug is enabled exposes a
@@ -45,6 +47,7 @@ type Server struct {
 	podList          []*PodConnections
 	podIPtoIndex     map[string]int
 	podListLock      sync.Mutex
+	elasticClient    *el.Client
 }
 
 // New creates a new diagnose server
@@ -58,12 +61,19 @@ func New() *Server {
 
 // Init initialize the mux for the http handling and register the base hooks
 func (s *Server) Init() {
+
+	c, err := elastic.NewClient("52.42.55.249", "9200")
+	if err != nil {
+		panic(err)
+	}
+	s.elasticClient = c
+
 	// initialize services data
 	s.refreshServiceList()
 	s.refreshPodList()
 
 	// keeps data fresh
-	// go s.refreshData()
+	go s.refreshData()
 
 	s.mux = http.NewServeMux()
 
@@ -129,7 +139,7 @@ func (s *Server) refreshServiceList() {
 	log := logrus.WithField("method", "refreshServices")
 	log.Debug("start")
 
-	services, err := elastic.GetServices()
+	services, err := elastic.GetServices(s.elasticClient)
 	if err != nil {
 		log.WithError(err).Error("error in getting services")
 		panic(err)
@@ -193,14 +203,14 @@ func (s *Server) refreshServiceConnections() {
 	log := logrus.WithField("method", "refreshConnections")
 	log.Debug("start")
 	for _, srv := range s.serviceList {
-		connections, err := elastic.GetAllConnections(srv.service.Spec.ClusterIP, 0)
+		connections, err := elastic.GetAllConnections(s.elasticClient, srv.service.Spec.ClusterIP, 0)
 		if err != nil {
 			log.WithError(err).Error("error in getting connections")
 			panic(err)
 		}
 		srv.connections = connections
 		for _, pod := range srv.pods {
-			connections, err := elastic.GetAllConnections(pod.Status.PodIP, 0)
+			connections, err := elastic.GetAllConnections(s.elasticClient, pod.Status.PodIP, 0)
 			if err != nil {
 				log.WithError(err).Error("error in getting connections")
 				continue
@@ -216,7 +226,7 @@ func (s *Server) refreshPodList() {
 	log := logrus.WithField("method", "refreshPods")
 	log.Debug("start")
 
-	pods, err := elastic.GetPods()
+	pods, err := elastic.GetPods(s.elasticClient)
 	if err != nil {
 		log.WithError(err).Error("error in getting pods")
 		panic(err)
@@ -258,7 +268,7 @@ func (s *Server) refreshPodConnections() {
 	log := logrus.WithField("method", "refreshPodConnections")
 	log.Debug("start")
 	for _, pod := range s.podList {
-		connections, err := elastic.GetAllConnections(pod.pod.Status.PodIP, 0)
+		connections, err := elastic.GetAllConnections(s.elasticClient, pod.pod.Status.PodIP, 0)
 		if err != nil {
 			log.WithError(err).Error("error in getting connection for pod")
 			continue

@@ -27,11 +27,7 @@ type Pod struct {
 	Status podStatus   `json:"status"`
 }
 
-func GetPods() ([]*Pod, error) {
-	c, err := NewClient("52.42.55.249", "9200")
-	if err != nil {
-		panic(err)
-	}
+func GetPods(c *elastic.Client) ([]*Pod, error) {
 
 	// termQuery := elastic.NewTermQuery("dest_ip", "172.31.39.84")
 	searchResult, err := c.Search().
@@ -69,7 +65,7 @@ func GetPodsForService(srv *Service) ([]*Pod, error) {
 		termQuery := elastic.NewMatchPhraseQuery(fmt.Sprintf("metadata.labels.%s", k), v)
 		labelToMatch = append(labelToMatch, termQuery)
 	}
-	shouldClause := elastic.NewBoolQuery().Should(labelToMatch...)
+	shouldClause := elastic.NewBoolQuery().Filter(elastic.NewBoolQuery().Should(labelToMatch...))
 
 	// logrus.Infof("Query is:%+v", shouldClause)
 

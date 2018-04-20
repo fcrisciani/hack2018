@@ -22,15 +22,11 @@ type Connection struct {
 	DstPort  int    `json:"orig.l4.dport"`
 }
 
-func GetAllConnections(IP string, protocol int) ([]*Connection, error) {
-	c, err := NewClient("52.42.55.249", "9200")
-	if err != nil {
-		panic(err)
-	}
+func GetAllConnections(c *elastic.Client, IP string, protocol int) ([]*Connection, error) {
 
-	shouldClause := elastic.NewBoolQuery().Should(elastic.NewMatchPhraseQuery("dest_ip", IP), elastic.NewMatchPhraseQuery("src_ip", IP))
+	shouldClause := elastic.NewBoolQuery().Filter(elastic.NewTermQuery("ct.event", 1), elastic.NewBoolQuery().Should(elastic.NewMatchQuery("dest_ip", IP), elastic.NewMatchQuery("src_ip", IP)))
 	if protocol != 0 {
-		shouldClause = shouldClause.Must(elastic.NewMatchPhraseQuery("ip.protocol", protocol))
+		shouldClause = shouldClause.Filter(elastic.NewTermQuery("orig.ip.protocol", protocol))
 	}
 	searchResult, err := c.Search().
 		Index("logstash-*"). // search in index "twitter"
@@ -63,6 +59,11 @@ func GetAllConnections(IP string, protocol int) ([]*Connection, error) {
 			err := json.Unmarshal(*hit.Source, &t)
 			if err != nil {
 				// Deserialization failed
+			}
+
+			// Skip elastic flows
+			if (t.SrcIP == "52.42.55.249" || t.DstIP == "52.42.55.249") && (t.SrcPort == 9200 || t.DstPort == 9200) {
+				continue
 			}
 
 			// Work with tweet

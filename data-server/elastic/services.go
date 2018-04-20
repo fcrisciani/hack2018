@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/olivere/elastic"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,11 +22,7 @@ type Service struct {
 	Spec serviceSpec
 }
 
-func GetServices() ([]*Service, error) {
-	c, err := NewClient("52.42.55.249", "9200")
-	if err != nil {
-		panic(err)
-	}
+func GetServices(c *elastic.Client) ([]*Service, error) {
 
 	// termQuery := elastic.NewTermQuery("dest_ip", "172.31.39.84")
 	searchResult, err := c.Search().

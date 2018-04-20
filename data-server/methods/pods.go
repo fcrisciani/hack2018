@@ -32,14 +32,17 @@ func pods(ctx interface{}, w http.ResponseWriter, r *http.Request) {
 			srcI, srcOK := s.podIPtoIndex[c.SrcIP]
 			if srcOK && index != srcI {
 				e.ToElement[srcI].Total++
+				e.ToElement[srcI].Flows = append(e.ToElement[srcI].Flows, *c)
 			}
 			dstI, dstOK := s.podIPtoIndex[c.DstIP]
 			if dstOK && index != dstI {
 				e.ToElement[dstI].Total++
+				e.ToElement[dstI].Flows = append(e.ToElement[dstI].Flows, *c)
 			}
 			// if both source and destination are equal to this service, this is a connection within the pod
 			if srcI == index && dstI == index {
 				e.ToElement[index].Total++
+				e.ToElement[index].Flows = append(e.ToElement[index].Flows, *c)
 			}
 		}
 		log.Infof("pod %s(%s) row:%+v", p.pod.Meta.Name, p.pod.Status.PodIP, e)
