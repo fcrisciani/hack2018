@@ -6,11 +6,41 @@ body {
 
   flex: 1;
 }
+.disconnectedList {
+  text-align: left;
+}
 .App {
   text-align: center;
   width: 100vw;
   height: 60vh;
   padding-top: 30px;
+}
+.chord-container {
+  max-height: 500px;
+}
+.content {
+  display: flex;
+
+}
+.graphs {
+  flex: 3;
+  display: flex;
+  flex-flow: column;
+}
+.disconnectedList {
+  flex: 1;
+}
+
+.disconnected-list h3 {
+  text-align: left;
+}
+.disconnected-list ul {
+  padding-left: 3px;
+}
+.disconnected-list li {
+  list-style: none;
+  text-align: left;
+  margin: 3px 0;
 }
 .loading {
   display: flex;
