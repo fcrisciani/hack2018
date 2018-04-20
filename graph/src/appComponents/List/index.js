@@ -3,24 +3,25 @@ import React, { Component } from 'react';
 export default class List extends Component {
   render() {
     if (!this.props.items.length) {
-      return (
-        <div>
-          All items connected
-        </div>
-      )
+      return this.props.empty;
     }
     return (
-      <ul>
-        {
-          this.props.items.map((item, i) => {
-            return (
-              <li key={i}>
-              {item}
-              </li>
-            );
-          })
-        }
-      </ul>
+      <div className="list-container">
+      <h3 className="list-title">
+        {this.props.title}
+      </h3>
+        <ul>
+          {
+            this.props.items.map((item, i) => {
+              return (
+                <li key={i}>
+                {item}
+                </li>
+              );
+            })
+          }
+        </ul>
+      </div>
     );
   }
 }

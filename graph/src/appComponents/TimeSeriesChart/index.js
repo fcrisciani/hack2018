@@ -225,7 +225,7 @@ class TimeSeriesChart extends Component<Props, State> {
       .attr('y1', this.yScale.range()[0])
       .attr('y2', this.yScale.range()[1])
       .attr('stroke-width', 0.5)
-      .attr('stroke', 'black');
+      .attr('stroke', 'white');
   }
 
   focusInterpolatedData(point: XYPoint) {
@@ -285,7 +285,7 @@ class TimeSeriesChart extends Component<Props, State> {
       .attr('y1', this.yScale.range()[0])
       .attr('y2', this.yScale.range()[1])
       .attr('stroke-width', 0.5)
-      .attr('stroke', 'black');
+      .attr('stroke', 'white');
     this.d3Chart.select('.pause-cursor')
       .select('line')
       .attr('x1', point.x)
@@ -293,7 +293,7 @@ class TimeSeriesChart extends Component<Props, State> {
       .attr('y1', this.yScale.range()[0])
       .attr('y2', this.yScale.range()[1])
       .attr('stroke-width', 0.5)
-      .attr('stroke', 'black');
+      .attr('stroke', 'white');
   }
 
   componentDidMount() {
@@ -540,7 +540,7 @@ class TimeSeriesChart extends Component<Props, State> {
   onClick = (point) => {
     console.log('mouse event')
     console.log(point)
-    const rect = this.graphDiv.getBoundingClientRect();
+    // const rect = this.graphDiv.getBoundingClientRect();
     const clickX = point.x;
     const clickY = point.y;
     this.setState({
@@ -595,9 +595,9 @@ class TimeSeriesChart extends Component<Props, State> {
             display: matches.length ?  'block' : 'none',
             top: this.state.py,
             left: this.state.px,
-
+            color: 'black',
             position: 'absolute',
-            background: 'white',
+            background: 'grey',
             pointerEvents: 'none',
             border: 'solid 1px #70787D',
             padding: '10px',
@@ -617,7 +617,7 @@ class TimeSeriesChart extends Component<Props, State> {
             )
           })}
           { matches.length ?
-            <div style={{ paddingTop: '8px' }}>
+            <div style={{ color: 'white', paddingTop: '8px' }}>
               <div>
                 {(new Date(matches[0].x)).toLocaleTimeString()}
               </div>

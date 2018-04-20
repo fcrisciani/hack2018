@@ -2,6 +2,10 @@ body {
   width: 100vw;
   height: 100vh;
 }
+html {
+  background: black;
+  color: white;
+}
 #root {
 
   flex: 1;
@@ -16,7 +20,7 @@ body {
   padding-top: 30px;
 }
 .chord-container {
-  max-height: 500px;
+  color: black;
 }
 .content {
   display: flex;
@@ -27,20 +31,26 @@ body {
   display: flex;
   flex-flow: column;
 }
-.disconnectedList {
-  flex: 1;
+.disconnected-list {
+  flex: 0 0 auto;
+  padding: 5px;
 }
-
+.list-container {
+      border: 1px solid;
+    padding: 10px;
+}
 .disconnected-list h3 {
   text-align: left;
 }
 .disconnected-list ul {
   padding-left: 3px;
+  padding-right: 10px;
 }
 .disconnected-list li {
   list-style: none;
   text-align: left;
-  margin: 3px 0;
+  margin: 5px 5px;
+  border-bottom: solid 1px rgba(0,0,0,0.4);
 }
 .loading {
   display: flex;

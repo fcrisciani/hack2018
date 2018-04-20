@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Chord } from 'nivo';
+// import {Chord} from './appComponents/nivo/lib/Chord';
 import request from 'superagent';
 import chordBackendToChordData from './utils/transforms/chordBackendToChordData';
 import HistorySelect from './appComponents/HistorySelect';
@@ -9,6 +10,8 @@ import sample from './mock/sample.json';
 import samplePods from './mock/sample_pods.json';
 import './App.css';
 import debounce from 'lodash/debounce'
+import Dropdown from 'react-dropdown'
+import 'react-dropdown/style.css'
 
 const ENDPOINT_LOCALSTORAGE_KEY = 'hkdayendpoint';
 let tickCount = 1;
@@ -20,11 +23,19 @@ const getTotalCount = (matrix) => {
     return vector.reduce(sum, 0)
   }).reduce(sum, 0);
 }
+const getEndpointPortion = (endpoint) => {
+  const splitted = endpoint.split('/')
+  const endpointPortion = splitted[splitted.length-1]
+  return endpointPortion;
+}
 class App extends Component {
   constructor(props) {
     super(props);
+    const endpoint = localStorage.getItem(ENDPOINT_LOCALSTORAGE_KEY) || 'http://52.42.55.249:10000/chord';
+    const endpointPortion = getEndpointPortion(endpoint);
     this.state = ({
-      endpoint:localStorage.getItem(ENDPOINT_LOCALSTORAGE_KEY) || 'http://52.42.55.249:10000/chord',
+      endpointPortion,
+      endpoint,
       hasPauseCursor: false,
       playing: true,
       history: [],
@@ -75,7 +86,7 @@ class App extends Component {
       }
     }
     const useSample = false;
-    const useSamplePods = true;
+    const useSamplePods = false;
     if (useSample) {
       const {connected, disconnected } = chordBackendToChordData(sample.graph);
       setNewState({connected, disconnected});
@@ -126,19 +137,32 @@ class App extends Component {
       this.tick();
     }
   }
+
   storeEndpoint = debounce((endpoint) => {
     localStorage.setItem(ENDPOINT_LOCALSTORAGE_KEY, endpoint)
   }, 200)
   onInputChange = (e) => {
     const endpoint = e.target.value;
+    const endpointPortion = getEndpointPortion(endpoint);
     this.setState({
       endpoint,
+      endpointPortion
     })
     this.storeEndpoint(endpoint)
     this.tick();
   }
   getChordChartSize() {
-    return Math.max(Math.min(this.state.windowWidth, this.state.windowHeight) * 0.5, 300)
+    return Math.max(Math.min(this.state.windowWidth, this.state.windowHeight) * 1, 300)
+  }
+  onDropdownChange = (newVal) => {
+    const endpointPortion = newVal.value;
+    const endpoint = `http://52.42.55.249:10000/${endpointPortion}`
+    this.setState({
+      endpoint,
+      endpointPortion,
+    })
+    this.storeEndpoint(endpoint)
+    this.tick()
   }
   render() {
     if (this.state.initialFetching) {
@@ -148,18 +172,25 @@ class App extends Component {
         </div>
       );
     }
+
     return (
       <div className="App">
-        <label>
-          endpoint
-          <input
-            style={{
-              border: 0,
-              width: 400,
-              margin: '0 5px',
-            }}
-           onChange={this.onInputChange} value={this.state.endpoint} type="text"/>
-        </label>
+        <div style={{
+          width: 300,
+          margin: 'auto'
+        }}>
+          <Dropdown
+            options={[
+              'services',
+              'pods',
+              'external',
+            ]}
+            value={this.state.endpointPortion}
+            onChange={this.onDropdownChange}
+          />
+        </div>
+
+
         <h3 className="title">
           <PlayPause onChange={this.onPlayPauseChange} playing={this.state.playing}/>
           {this.state.totalCount} connections @{this.state.time.toLocaleTimeString('en-US')}
@@ -168,6 +199,9 @@ class App extends Component {
           <div className="graphs">
             <div className="chord-container">
               <Chord
+                tooltipFormat={this.tooltipFormat}
+
+                onClick={(e) => {alert(e)}}
                 width={this.getChordChartSize()}
                 height={this.getChordChartSize()}
                 matrix={this.state.data}
@@ -220,12 +254,30 @@ class App extends Component {
             </div>
           </div>
           <div className="disconnected-list">
-            <h3>
-              disconnected items
-            </h3>
-            <List items={this.state.disconnectedLabels}/>
+            <List 
+              title={
+                <h3>
+                  Inactive Endoints
+                </h3>
+              }
+              empty={
+                <div>
+                  All Ednpoints Connected
+                </div>
+              }
+              items={this.state.disconnectedLabels}/>
           </div>
         </div>
+        <label>
+          edit endpoint
+          <input
+            style={{
+              border: 0,
+              width: 400,
+              margin: '0 5px',
+            }}
+           onChange={this.onInputChange} value={this.state.endpoint} type="text"/>
+        </label>
       </div>
     );
   }
