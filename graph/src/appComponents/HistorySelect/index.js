@@ -46,7 +46,7 @@ export default class HistorySelect extends Component {
           /** An array of lines containing the data (see below for more info) */
           lines={
             [{  
-              color: 'black',
+              color: 'white',
               data: historyChartLines,
               key: 'h',
               label: 'connection total count',

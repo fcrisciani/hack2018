@@ -2,15 +2,55 @@ body {
   width: 100vw;
   height: 100vh;
 }
+html {
+  background: black;
+  color: white;
+}
 #root {
 
   flex: 1;
+}
+.disconnectedList {
+  text-align: left;
 }
 .App {
   text-align: center;
   width: 100vw;
   height: 60vh;
   padding-top: 30px;
+}
+.chord-container {
+  color: black;
+}
+.content {
+  display: flex;
+
+}
+.graphs {
+  flex: 3;
+  display: flex;
+  flex-flow: column;
+}
+.disconnected-list {
+  flex: 0 0 auto;
+  padding: 5px;
+}
+.list-container {
+      border: 1px solid;
+    padding: 10px;
+}
+.disconnected-list h3 {
+  text-align: left;
+}
+.disconnected-list ul {
+  padding-left: 3px;
+  padding-right: 10px;
+}
+.disconnected-list li {
+  list-style: none;
+  text-align: left;
+  margin: 5px 5px;
+  border-bottom: solid 1px rgba(0,0,0,0.4);
 }
 .loading {
   display: flex;

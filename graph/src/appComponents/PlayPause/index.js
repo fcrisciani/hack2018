@@ -20,7 +20,15 @@ export default class PlayPause extends Component {
   }
   render() {
     return (
-      <button style={{width: 34, height: 24, background: 'transparent', margin: '0 5px'}} onClick={this.onClick}>
+      <button style={{
+          width: 34,
+          height: 24,
+          background: 'transparent',
+          margin: '0 5px',
+          background: 'white',
+          border: 0,
+          boxShadow: '1px 1px 1px white',
+        }} onClick={this.onClick}>
         {
 
           this.renderImg()

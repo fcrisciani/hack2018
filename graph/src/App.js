@@ -1,12 +1,17 @@
 import React, { Component } from 'react';
-import { ResponsiveChord } from 'nivo';
+import { Chord } from 'nivo';
+// import {Chord} from './appComponents/nivo/lib/Chord';
 import request from 'superagent';
 import chordBackendToChordData from './utils/transforms/chordBackendToChordData';
 import HistorySelect from './appComponents/HistorySelect';
 import PlayPause from './appComponents/PlayPause';
+import List from './appComponents/List';
 import sample from './mock/sample.json';
+import samplePods from './mock/sample_pods.json';
 import './App.css';
 import debounce from 'lodash/debounce'
+import Dropdown from 'react-dropdown'
+import 'react-dropdown/style.css'
 
 const ENDPOINT_LOCALSTORAGE_KEY = 'hkdayendpoint';
 let tickCount = 1;
@@ -18,17 +23,27 @@ const getTotalCount = (matrix) => {
     return vector.reduce(sum, 0)
   }).reduce(sum, 0);
 }
+const getEndpointPortion = (endpoint) => {
+  const splitted = endpoint.split('/')
+  const endpointPortion = splitted[splitted.length-1]
+  return endpointPortion;
+}
 class App extends Component {
   constructor(props) {
     super(props);
+    const endpoint = localStorage.getItem(ENDPOINT_LOCALSTORAGE_KEY) || 'http://52.42.55.249:10000/chord';
+    const endpointPortion = getEndpointPortion(endpoint);
     this.state = ({
-      endpoint:localStorage.getItem(ENDPOINT_LOCALSTORAGE_KEY) || 'http://52.42.55.249:10000/chord',
+      endpointPortion,
+      endpoint,
       hasPauseCursor: false,
       playing: true,
       history: [],
       initialFetching: true,
       data: [[]],
       labels:[],
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
     })
   }
   tick = debounce(() => {
@@ -40,26 +55,29 @@ class App extends Component {
     this.timeout = setTimeout(this.tick, timeoutT);
   }, 500)
   doRequest() {
-    const setNewState = (newState) => {
+    const setNewState = ({connected, disconnected}) => {
       const time = new Date();
-      const totalCount = getTotalCount(newState.matrix);
+      const totalCount = getTotalCount(connected.matrix);
       this.state.history.push({
         time,
-        item: newState,
+        item: connected,
         totalCount,
+        disconnectedLabels: disconnected.labels,
       });
       if (this.state.history.length > 100) {
         // cap history
         this.state.history.splice(0, 1);
       }
+
       if (this.state.playing) {
         this.setState({
           history: this.state.history.slice(),
           time,
           initialFetching: false,
-          data: newState.matrix,
-          labels: newState.labels,
+          data: connected.matrix,
+          labels: connected.labels,
           totalCount,
+          disconnectedLabels: disconnected.labels,
         })
       } else {
         this.setState({
@@ -68,9 +86,13 @@ class App extends Component {
       }
     }
     const useSample = false;
+    const useSamplePods = false;
     if (useSample) {
-      const newState = chordBackendToChordData(sample.graph);
-      setNewState(newState);
+      const {connected, disconnected } = chordBackendToChordData(sample.graph);
+      setNewState({connected, disconnected});
+    } else if (useSamplePods) {
+      const {connected, disconnected } = chordBackendToChordData(samplePods.graph);
+      setNewState({connected, disconnected});
     } else {
       request
         .get(this.state.endpoint)
@@ -80,8 +102,8 @@ class App extends Component {
             return;
           }
           const graph = JSON.parse(res.text);
-          const newState = chordBackendToChordData(graph.graph)
-          setNewState(newState);
+          const {connected, disconnected } = chordBackendToChordData(graph.graph)
+          setNewState({connected, disconnected});
         })
     }
   }
@@ -93,11 +115,18 @@ class App extends Component {
       data: historyItem.item.matrix,
       labels: historyItem.item.labels,
       totalCount: historyItem.totalCount,
+      disconnectedLabels: historyItem.disconnectedLabels,
     })
   }
   componentDidMount() {
     clearTimeout(this.timeout);
     this.tick();
+    window.addEventListener('resize', () => {
+      this.setState({
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+      })
+    })
   }
   onPlayPauseChange = (newVal) => {
     this.setState({
@@ -108,16 +137,32 @@ class App extends Component {
       this.tick();
     }
   }
+
   storeEndpoint = debounce((endpoint) => {
     localStorage.setItem(ENDPOINT_LOCALSTORAGE_KEY, endpoint)
   }, 200)
   onInputChange = (e) => {
     const endpoint = e.target.value;
+    const endpointPortion = getEndpointPortion(endpoint);
     this.setState({
       endpoint,
+      endpointPortion
     })
     this.storeEndpoint(endpoint)
     this.tick();
+  }
+  getChordChartSize() {
+    return Math.max(Math.min(this.state.windowWidth, this.state.windowHeight) * 1, 300)
+  }
+  onDropdownChange = (newVal) => {
+    const endpointPortion = newVal.value;
+    const endpoint = `http://52.42.55.249:10000/${endpointPortion}`
+    this.setState({
+      endpoint,
+      endpointPortion,
+    })
+    this.storeEndpoint(endpoint)
+    this.tick()
   }
   render() {
     if (this.state.initialFetching) {
@@ -127,10 +172,104 @@ class App extends Component {
         </div>
       );
     }
+
     return (
       <div className="App">
+        <div style={{
+          width: 300,
+          margin: 'auto'
+        }}>
+          <Dropdown
+            options={[
+              'services',
+              'pods',
+              'external',
+            ]}
+            value={this.state.endpointPortion}
+            onChange={this.onDropdownChange}
+          />
+        </div>
+
+
+        <h3 className="title">
+          <PlayPause onChange={this.onPlayPauseChange} playing={this.state.playing}/>
+          {this.state.totalCount} connections @{this.state.time.toLocaleTimeString('en-US')}
+        </h3>
+        <div className="content">
+          <div className="graphs">
+            <div className="chord-container">
+              <Chord
+                tooltipFormat={this.tooltipFormat}
+
+                onClick={(e) => {alert(e)}}
+                width={this.getChordChartSize()}
+                height={this.getChordChartSize()}
+                matrix={this.state.data}
+                keys={this.state.labels}
+                margin={{
+                    "top": 100,
+                    "right": 100,
+                    "bottom": 100,
+                    "left": 100
+                }}
+                padAngle={0.04}
+                innerRadiusRatio={0.96}
+                innerRadiusOffset={0.02}
+                arcOpacity={1}
+                arcBorderWidth={1}
+                arcBorderColor="inherit:darker(0.4)"
+                ribbonOpacity={0.5}
+                ribbonBorderWidth={1}
+                ribbonBorderColor="inherit:darker(0.4)"
+                enableLabel={true}
+                label="id"
+                labelOffset={12}
+                labelRotation={-90}
+                labelTextColor="inherit:darker(1)"
+                colors="set1"
+                isInteractive={true}
+                arcHoverOpacity={1}
+                arcHoverOthersOpacity={0.25}
+                ribbonHoverOpacity={0.75}
+                ribbonHoverOthersOpacity={0.25}
+                animate={true}
+                motionStiffness={90}
+                motionDamping={17}
+                legends={[{
+                    "anchor": "bottom",
+                    "direction": "row",
+                    "translateY": 70,
+                    "itemWidth": 180,
+                    "itemHeight": 14,
+                    "symbolSize": 14,
+                    "symbolShape": "circle"
+                  }]}
+              />
+            </div>
+            <div className="controls">
+              <HistorySelect
+                  hasPauseCursor={this.state.hasPauseCursor}
+                  history={this.state.history}
+                  onChange={this.onHistoryChange}/>
+            </div>
+          </div>
+          <div className="disconnected-list">
+            <List 
+              title={
+                <h3>
+                  Inactive Endoints
+                </h3>
+              }
+              empty={
+                <div>
+                  All Ednpoints Connected
+                </div>
+              }
+              items={this.state.disconnectedLabels}/>
+          </div>
+        </div>
         <label>
-          endpoint
+          edit endpoint
           <input
             style={{
               border: 0,
@@ -139,58 +278,6 @@ class App extends Component {
             }}
            onChange={this.onInputChange} value={this.state.endpoint} type="text"/>
         </label>
-        <h3 className="title">
-          <PlayPause onChange={this.onPlayPauseChange} playing={this.state.playing}/>
-          {this.state.totalCount} connections @{this.state.time.toLocaleTimeString('en-US')}
-        </h3>
-        <ResponsiveChord
-          matrix={this.state.data}
-          keys={this.state.labels}
-          margin={{
-              "top": 60,
-              "right": 60,
-              "bottom": 90,
-              "left": 60
-          }}
-          padAngle={0.02}
-          innerRadiusRatio={0.96}
-          innerRadiusOffset={0.02}
-          arcOpacity={1}
-          arcBorderWidth={1}
-          arcBorderColor="inherit:darker(0.4)"
-          ribbonOpacity={0.5}
-          ribbonBorderWidth={1}
-          ribbonBorderColor="inherit:darker(0.4)"
-          enableLabel={true}
-          label="id"
-          labelOffset={12}
-          labelRotation={-90}
-          labelTextColor="inherit:darker(1)"
-          colors="set1"
-          isInteractive={true}
-          arcHoverOpacity={1}
-          arcHoverOthersOpacity={0.25}
-          ribbonHoverOpacity={0.75}
-          ribbonHoverOthersOpacity={0.25}
-          animate={true}
-          motionStiffness={90}
-          motionDamping={17}
-          legends={[{
-              "anchor": "bottom",
-              "direction": "row",
-              "translateY": 70,
-              "itemWidth": 80,
-              "itemHeight": 14,
-              "symbolSize": 14,
-              "symbolShape": "circle"
-            }]}
-          />
-            <div className="controls">
-          <HistorySelect
-              hasPauseCursor={this.state.hasPauseCursor}
-              history={this.state.history}
-              onChange={this.onHistoryChange}/>
-        </div>
       </div>
     );
   }
